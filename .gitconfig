@@ -1,0 +1,37 @@
+[core]
+	compression = 9
+	whitespace = error
+	preloadindex = true
+	excludesfile = ~/.gitignore_global
+[user]
+	name = Nawat Suangburanakul
+	email = nawathome@gmail.com
+	signingkey = D9D8D887755271F41EAA06182F2B6FDAEF1FE382
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+[commit]
+	gpgsign = true
+[status]
+	branch = true
+	showStash = true
+[log]
+	abbrevCommit = true
+	graphColors = blue,yellow,cyan,magenta,green,red
+[color "decorate"]
+	HEAD = red
+	branch = blue
+	tag = yellow
+	remoteBranch = magenta
+[color "branch"]
+	current = magenta
+	local = default
+	remote = yellow
+	upstream = green
+	plain = blue
+[branch]
+	sort = -committerdate
+[tag]
+	sort = -taggerdate
