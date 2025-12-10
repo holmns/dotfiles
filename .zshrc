@@ -1,3 +1,5 @@
+neofetch
+
 export GPG_TTY=$(tty)
 
 # If you come from bash you might have to change your $PATH.
@@ -118,6 +120,14 @@ if ! zplug check --verbose; then
     fi
 fi
 
+# Load secrets if available
+if [ -f ~/.zsh_secrets ]; then
+  source ~/.zsh_secrets
+fi
+
+# Auto suggestions
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
 # Git Aliases
 alias ga="git add"
 alias gs="git status"
@@ -144,6 +154,10 @@ export VISUAL="nvim"
 alias vim="nvim"
 
 # FZF Aliases
-alias cdf="cd \$(find * -type d | fzf)"
 eval "$(zoxide init zsh)"
+alias cdf="cd \$(find * -type d | fzf)"
 alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
+source ~/fzf-git.sh/fzf-git.sh
+
+# Custom Aliases
+alias dmis="cd && cd Documents/dmis/ && npm run start"

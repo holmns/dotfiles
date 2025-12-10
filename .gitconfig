@@ -3,6 +3,7 @@
 	whitespace = error
 	preloadindex = true
 	excludesfile = ~/.gitignore_global
+	pager = delta
 [user]
 	name = Nawat Suangburanakul
 	email = nawathome@gmail.com
@@ -36,3 +37,13 @@
 	sort = -committerdate
 [tag]
 	sort = -taggerdate
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+[merge]
+	conflictstyle = diff3
+[diff]
+	colorMoved = default
