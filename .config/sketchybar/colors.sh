@@ -16,25 +16,46 @@
 # export BG2=0xff414550
 
 ### Catppuccin
-export BLACK=0xff181926
-export WHITE=0xffcad3f5
-export RED=0xffed8796
-export GREEN=0xffa6da95
-export BLUE=0xff8aadf4
-export YELLOW=0xffeed49f
-export ORANGE=0xfff5a97f
-export MAGENTA=0xffc6a0f6
-export GREY=0xff939ab7
-export TRANSPARENT=0x00000000
-export BG0=0xff1e1e2e
-export BG1=0x603c3e4f
-export BG2=0x60494d64
+# export BLACK=0xff181926
+# export WHITE=0xffcad3f5
+# export RED=0xffed8796
+# export GREEN=0xffa6da95
+# export BLUE=0xff8aadf4
+# export YELLOW=0xffeed49f
+# export ORANGE=0xfff5a97f
+# export MAGENTA=0xffc6a0f6
+# export GREY=0xff939ab7
+# export TRANSPARENT=0x00000000
+# export BG0=0xff1e1e2e
+# export BG1=0x603c3e4f
+# export BG2=0x60494d64
 
-export BATTERY_1=0xffa6da95
-export BATTERY_2=0xffeed49f
-export BATTERY_3=0xfff5a97f
-export BATTERY_4=0xffee99a0
-export BATTERY_5=0xffed8796
+# export BATTERY_1=0xffa6da95
+# export BATTERY_2=0xffeed49f
+# export BATTERY_3=0xfff5a97f
+# export BATTERY_4=0xffee99a0
+# export BATTERY_5=0xffed8796
+
+### macOS Neutral (system dark mode palette)
+export BLACK=0xff1c1c1e
+export WHITE=0xfff2f2f7
+export RED=0xffff453a
+export GREEN=0xff32d74b
+export BLUE=0xff0a84ff
+export YELLOW=0xffffd60a
+export ORANGE=0xffff9f0a
+export MAGENTA=0xffbf5af2
+export GREY=0xff8e8e93
+export TRANSPARENT=0x00000000
+export BG0=0xff1c1c1e
+export BG1=0x602c2c2e
+export BG2=0x603a3a3c
+
+export BATTERY_1=0xff32d74b
+export BATTERY_2=0xffffd60a
+export BATTERY_3=0xffff9f0a
+export BATTERY_4=0xffff6961
+export BATTERY_5=0xffff453a
 
 # General bar colors
 export BAR_COLOR=$BG0

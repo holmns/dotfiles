@@ -1,7 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
-SSID=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | awk -F:  '($1 ~ "^ *SSID$"){print $2}' | cut -c 2-)
+CONNECTED=$(scutil --nwi | grep -q "Not Reachable" && echo 0 || echo 1)
 
-sketchybar --set wifi \
-  icon= icon.color=0xff58d1fc \
-  label="$SSID"
+if [[ "$CONNECTED" == "0" ]]; then
+  ICON="􀙈"
+else
+  ICON="􀙇"
+fi
+
+sketchybar --set wifi icon="$ICON"

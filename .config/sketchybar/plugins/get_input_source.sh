@@ -8,15 +8,15 @@ current_input_source=$(echo "$plist_data" | plutil -convert xml1 -o - - | grep -
 
 if [ "$current_input_source" = "ABC" ]; then
     sketchybar --set input_source label="A" \
-        label.padding_left=5 \
+        label.padding_left=3 \
         label.padding_right=9 \
         label.y_offset=0
 
 elif [ "$current_input_source" = "Thai" ]; then
     sketchybar --set input_source label="ก" \
-        label.padding_left=6 \
+        label.padding_left=4 \
         label.padding_right=10 \
-        label.y_offset=2
+        label.y_offset=1
 else
     sketchybar --set input_source label="-"
 fi

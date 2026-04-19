@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 source "$CONFIG_DIR/colors.sh"
 
 PERCENTAGE="$(pmset -g batt | grep -Eo "\d+%" | cut -d% -f1)"
 CHARGING="$(pmset -g batt | grep 'AC Power')"
+POWERMODE="$(pmset -g | awk '/powermode/ {print $2}')"
 
 if [ "$PERCENTAGE" = "" ]; then
   exit 0
@@ -11,26 +12,30 @@ fi
 
 case ${PERCENTAGE} in
   [8-9][0-9] | 100)
-    ICON="􀛨"
+    LABEL="􀛨"
     ;;
   7[0-9])
-    ICON="􀺸"
+    LABEL="􀺸"
     ;;
   [4-6][0-9])
-    ICON="􀺶"
+    LABEL="􀺶"
     ;;
   [1-3][0-9])
-      ICON="􀛩"
+    LABEL="􀛩"
     ;;
   [0-9])
-    ICON="􀛪"
+    LABEL="􀛪"
     ;;
 esac
 
 if [[ "$CHARGING" != "" ]]; then
-  ICON="􀢋"
+  LABEL="􀢋"
 fi
 
-# The item invoking this script (name $NAME) will get its icon and label
-# updated with the current battery status
-sketchybar --set "$NAME" icon="$ICON" label="${PERCENTAGE}%" icon.color=${ICON_COLOR}
+if [[ "$POWERMODE" == "1" ]]; then
+  COLOR="0xfff5a627"
+else
+  COLOR="$WHITE"
+fi
+
+sketchybar --set "$NAME" icon="${PERCENTAGE}%" label="$LABEL" label.color="$COLOR"

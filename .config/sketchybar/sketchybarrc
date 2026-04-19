@@ -13,15 +13,6 @@ PADDINGS=3 # All paddings use this value (icon, label, background)
 AEROSPACE_FOCUSED_MONITOR_NO=$(aerospace list-workspaces --focused)
 AEROSPACE_LIST_OF_WINDOWS_IN_FOCUSED_MONITOR=$(aerospace list-windows --workspace $AEROSPACE_FOCUSED_MONITOR_NO | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
 
-# Setting up and starting the helper process
-HELPER=git.felix.helper
-killall helper
-(cd $CONFIG_DIR/helper && make)
-$CONFIG_DIR/helper/helper $HELPER > /dev/null 2>&1 &
-
-# Unload the macOS on screen indicator overlay for volume change
-launchctl unload -F /System/Library/LaunchAgents/com.apple.OSDUIHelper.plist > /dev/null 2>&1 &
-
 # Setting up the general bar appearance of the bar
 bar=(
   height=45
@@ -47,7 +38,7 @@ defaults=(
   updates=when_shown
   icon.font="$FONT:Regular:14.0"
   icon.color=$ICON_COLOR
-  icon.padding_left=$PADDINS
+  icon.padding_left=$PADDINGS
   icon.padding_right=$PADDINGS
   label.font="$FONT:Semibold:13.0"
   label.color=$LABEL_COLOR
@@ -94,7 +85,6 @@ source "$ITEM_DIR/wifi.sh"
 source "$ITEM_DIR/volume.sh"
 source "$ITEM_DIR/svim.sh"
 
-#source "$ITEM_DIR/cpu.sh"
 #source "$ITEM_DIR/weather.sh"
 
 sketchybar --hotload on

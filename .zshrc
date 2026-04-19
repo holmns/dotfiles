@@ -1,5 +1,3 @@
-neofetch
-
 export GPG_TTY=$(tty)
 
 # If you come from bash you might have to change your $PATH.
@@ -160,4 +158,13 @@ alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 source ~/fzf-git.sh/fzf-git.sh
 
 # Custom Aliases
-alias dmis="cd && cd Documents/dmis/ && npm run start"
+function dmis() {
+    (cd ~/Documents/dmis && npm run start)
+}
+
+# Env
+export PATH="$HOME/.local/bin:$PATH"
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
