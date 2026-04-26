@@ -1,11 +1,13 @@
 #!/bin/bash
 
-CONNECTED=$(scutil --nwi | grep -q "Not Reachable" && echo 0 || echo 1)
+IPV4=$(ipconfig getifaddr en0)
 
-if [[ "$CONNECTED" == "0" ]]; then
-  ICON="􀙈"
+if [[ -z "$IPV4" ]]; then
+  ICON="􀙈"  # disconnected
+elif [[ "$IPV4" == 172.20.10.* ]]; then
+  ICON="􀉤"  # hotspot
 else
-  ICON="􀙇"
+  ICON="􀙇"  # wifi
 fi
 
 sketchybar --set wifi icon="$ICON"

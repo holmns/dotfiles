@@ -5,6 +5,14 @@ source "$CONFIG_DIR/colors.sh"
 AEROSPACE_FOCUSED_MONITOR=$(aerospace list-monitors --focused | awk '{print $1}')
 AEROSPACE_WORKSPACE_FOCUSED_MONITOR=$(aerospace list-workspaces --monitor focused --empty no)
 AEROSPACE_EMPTY_WORKSPACE=$(aerospace list-workspaces --monitor focused --empty)
+AEROSPACE_NUM_MONITORS=$(aerospace list-monitors | wc -l | tr -d ' ')
+
+# When only the main monitor is connected, A-I are parked on it temporarily.
+# Drop them from the lists so sketchybar doesn't touch items that weren't created.
+if [ "$AEROSPACE_NUM_MONITORS" = "1" ]; then
+  AEROSPACE_WORKSPACE_FOCUSED_MONITOR=$(printf '%s\n' $AEROSPACE_WORKSPACE_FOCUSED_MONITOR | grep -v '^[A-I]$' | tr '\n' ' ')
+  AEROSPACE_EMPTY_WORKSPACE=$(printf '%s\n' $AEROSPACE_EMPTY_WORKSPACE | grep -v '^[A-I]$' | tr '\n' ' ')
+fi
 
 reload_workspace_icon() {
   apps=$(aerospace list-windows --workspace "$@" | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')

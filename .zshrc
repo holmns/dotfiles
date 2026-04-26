@@ -1,3 +1,7 @@
+if [ -f ~/.zshrc.secrets ]; then
+    source ~/.zshrc.secrets
+fi
+
 export GPG_TTY=$(tty)
 
 # If you come from bash you might have to change your $PATH.
@@ -167,4 +171,6 @@ export PATH="$HOME/.local/bin:$PATH"
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)

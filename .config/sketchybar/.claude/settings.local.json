@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sketchybar --help)",
+      "Bash(sketchybar --man)",
+      "Bash(sketchybar --version)",
+      "Bash(col -b)",
+      "WebSearch",
+      "WebFetch(domain:felixkratz.github.io)",
+      "Bash(gh api *)",
+      "WebFetch(domain:github.com)",
+      "Bash(swift *)",
+      "Bash(aerospace list-monitors *)",
+      "Bash(aerospace list-workspaces *)",
+      "Bash(aerospace --version)",
+      "Bash(chmod +x *)",
+      "Bash(/opt/homebrew/bin/aerospace reload-config *)",
+      "Bash(echo \"--- aerospace reload exit: $? ---\")",
+      "Bash(/opt/homebrew/bin/sketchybar --reload)",
+      "Bash(echo \"--- sketchybar reload exit: $? ---\")",
+      "Bash(/Users/home/.config/aerospace/focus-workspace.sh 3)",
+      "Bash(/opt/homebrew/bin/sketchybar --query bar)",
+      "Bash(/Users/home/.config/aerospace/focus-workspace.sh 1)",
+      "Bash(export SENDER=\"aerospace_workspace_change\" CONFIG_DIR=/Users/home/.config/sketchybar PLUGIN_DIR=/Users/home/.config/sketchybar/plugins AEROSPACE_FOCUSED_WORKSPACE=1 AEROSPACE_PREV_WORKSPACE=3 NAME=space_creator)",
+      "Bash(bash /Users/home/.config/sketchybar/plugins/space_windows.sh)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(/Users/home/.config/aerospace/focus-workspace.sh 5)",
+      "Bash(sketchybar --query space.5)",
+      "Bash(sketchybar --query space.1)",
+      "Bash(sketchybar --trigger aerospace_workspace_change AEROSPACE_FOCUSED_WORKSPACE=1 AEROSPACE_PREV_WORKSPACE=5)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('icon.highlight:', d['icon']['highlight']\\); print\\('label.highlight:', d['label']['highlight']\\); print\\('background.border_color:', d['geometry']['background']['border_color']\\)\")",
+      "Bash(sketchybar --query bar)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(x\\) for x in d.get\\('items',[]\\)]\")",
+      "Bash(python3 -c ' *)",
+      "Bash(echo \"--- exit: $? ---\")"
+    ]
+  }
+}

@@ -6,14 +6,34 @@
 # New space by left clicking separator (>)
 
 sketchybar --add event aerospace_workspace_change
-#echo $(aerospace list-workspaces --monitor 1 --visible no --empty no) >> ~/aaaa
+
+num_monitors=$(aerospace list-monitors | wc -l | tr -d ' ')
 
 for m in $(aerospace list-monitors | awk '{print $1}'); do
   for i in $(aerospace list-workspaces --monitor $m); do
+    # When only main is connected, skip A-I (they'd be parked on main temporarily).
+    if [ "$num_monitors" = "1" ]; then
+      case "$i" in
+        [A-I]) continue ;;
+      esac
+    fi
     sid=$i
+    # Internal workspace names A-I (secondary monitor) render as 1-9.
+    case "$sid" in
+      A) label_icon=1 ;;
+      B) label_icon=2 ;;
+      C) label_icon=3 ;;
+      D) label_icon=4 ;;
+      E) label_icon=5 ;;
+      F) label_icon=6 ;;
+      G) label_icon=7 ;;
+      H) label_icon=8 ;;
+      I) label_icon=9 ;;
+      *) label_icon=$sid ;;
+    esac
     space=(
       space="$sid"
-      icon="$sid"
+      icon="$label_icon"
       icon.color=$GREY
       icon.highlight_color=$WHITE
       icon.padding_left=10
@@ -51,9 +71,14 @@ for m in $(aerospace list-monitors | awk '{print $1}'); do
   done
 
   for i in $(aerospace list-workspaces --monitor $m --empty); do
+    if [ "$num_monitors" = "1" ]; then
+      case "$i" in
+        [A-I]) continue ;;
+      esac
+    fi
     sketchybar --set space.$i display=0
   done
-  
+
 done
 
 
