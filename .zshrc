@@ -1,8 +1,10 @@
-if [ -f ~/.zshrc.secrets ]; then
-    source ~/.zshrc.secrets
-fi
-
 export GPG_TTY=$(tty)
+
+# Over SSH there's no GUI, so tell gpg-agent's pinentry wrapper to use a
+# terminal prompt (pinentry-curses) instead of the macOS dialog.
+if [ -n "$SSH_CONNECTION" ]; then
+  export PINENTRY_USER_DATA="USE_CURSES=1"
+fi
 
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
@@ -80,47 +82,11 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch $(uname -m)"
-
-# Set personal aliases, overriding those provided by Oh My Zsh libs,
-# plugins, and themes. Aliases can be placed here, though Oh My Zsh
-# users are encouraged to define aliases within a top-level file in
-# the $ZSH_CUSTOM folder, with .zsh extension. Examples:
-# - $ZSH_CUSTOM/aliases.zsh
-# - $ZSH_CUSTOM/macos.zsh
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
-export ZPLUG_HOME=$(brew --prefix)/opt/zplug
-source $ZPLUG_HOME/init.zsh
-zplug "mafredri/zsh-async", from:github
-zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
-zplug load
-# Install plugins if there are plugins that have not been installed
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    fi
-fi
+# Async + Pure prompt
+source /opt/homebrew/opt/zplug/repos/mafredri/zsh-async/async.zsh
+fpath+=(/opt/homebrew/opt/zplug/repos/sindresorhus/pure)
+autoload -U promptinit; promptinit
+prompt pure
 
 # Load secrets if available
 if [ -f ~/.zsh_secrets ]; then
@@ -155,22 +121,89 @@ export VISUAL="nvim"
 # Nvim Aliases
 alias vim="nvim"
 
+# Claude Code Alias
+alias cc="claude"
+
 # FZF Aliases
 eval "$(zoxide init zsh)"
 alias cdf="cd \$(find * -type d | fzf)"
-alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 source ~/fzf-git.sh/fzf-git.sh
 
-# Custom Aliases
-function dmis() {
-    (cd ~/Documents/dmis && npm run start)
-}
+alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 
 # Env
 export PATH="$HOME/.local/bin:$PATH"
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
+export PATH="$HOME/.npm-global/bin:$PATH"
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+
+# opencode
+export PATH=/Users/home/.opencode/bin:$PATH
+
+
+# >>> claude-auto-retry >>>
+claude() {
+  # Re-entry guard: if already running under auto-retry, just exec the real CLI.
+  if [ "${CLAUDE_AUTO_RETRY_ACTIVE}" = "1" ]; then
+    command claude "$@"
+    return $?
+  fi
+
+  # Auto-retry (tmux monitor) is opt-in via --auto-retry. Strip the flag out
+  # so it isn't forwarded to the claude CLI, which doesn't understand it.
+  local _car_enabled=0
+  local -a _car_args
+  local _car_a
+  for _car_a in "$@"; do
+    if [ "$_car_a" = "--auto-retry" ]; then
+      _car_enabled=1
+    else
+      _car_args+=("$_car_a")
+    fi
+  done
+
+  # Default: no auto-retry, no tmux -- run the real CLI directly.
+  if [ "$_car_enabled" != "1" ]; then
+    command claude "$@"
+    return $?
+  fi
+
+  export CLAUDE_AUTO_RETRY_ACTIVE=1
+  local _car_old_int_trap _car_old_term_trap
+  _car_old_int_trap=$(trap -p INT)
+  _car_old_term_trap=$(trap -p TERM)
+  trap 'unset CLAUDE_AUTO_RETRY_ACTIVE' INT TERM
+  node "/Users/home/.npm-global/lib/node_modules/claude-auto-retry/src/launcher.js" "${_car_args[@]}"
+  local _car_exit=$?
+  unset CLAUDE_AUTO_RETRY_ACTIVE
+  # Restore previous traps instead of clobbering them
+  eval "${_car_old_int_trap:-trap - INT}"
+  eval "${_car_old_term_trap:-trap - TERM}"
+  return $_car_exit
+}
+# <<< claude-auto-retry <<<
+
+
+# >>> ntu-hall-aircon >>>
+aircon() {
+  local path=~/code/hall-aircon
+  "$path"/.venv/bin/python "$path"/main.py "$@"
+}
+# <<< ntu-hall-aircon <<<
+
+
+# Android SDK
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+
+export PATH=$PATH:/Users/home/.spicetify
+
+# Syntax highlighting (must be sourced last)
+source /opt/homebrew/opt/zplug/repos/zsh-users/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# pnpm
+export PNPM_HOME="/Users/home/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
