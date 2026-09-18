@@ -99,13 +99,13 @@ vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagn
 -- Window keymaps
 vim.keymap.set("n", "<leader>w", "<C-w>", { remap = true, desc = "Window prefix" })
 
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
+-- Open terminal in split
+vim.keymap.set("n", "<leader>t", ":split | terminal<CR>i", { desc = "Open horizontal terminal" })
+vim.keymap.set("n", "<leader>T", ":vsplit | terminal<CR>i", { desc = "Open vertical terminal" })
+
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- TIP: Disable arrow keys in normal mode
 vim.keymap.set("n", "<left>", '<cmd>echo "Use h to move!!"<CR>')
@@ -122,11 +122,16 @@ vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right win
 vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+-- Only `d`/`D` copy into the unnamed register.
+-- c, s, x (and variants) delete/change without touching any register.
+local blackhole_keys = { "c", "C", "s", "S", "x", "X" }
+
+for _, key in ipairs(blackhole_keys) do
+	vim.keymap.set({ "n", "v" }, key, '"_' .. key, { noremap = true })
+end
+
+-- Paste in visual mode doesn't copy the original text
+vim.keymap.set("v", "p", '"_dP', { noremap = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -632,6 +637,45 @@ require("lazy").setup({
 						},
 					},
 				},
+
+				-- Python: basedpyright drives completion/hover/go-to, ruff drives
+				-- lint + import organisation. Both attach to the same buffer.
+				basedpyright = {
+					settings = {
+						basedpyright = {
+							analysis = {
+								-- "recommended"/"all" are noisy on untyped code
+								typeCheckingMode = "standard",
+								diagnosticMode = "openFilesOnly",
+								inlayHints = {
+									variableTypes = true,
+									callArgumentNames = true,
+									functionReturnTypes = true,
+								},
+							},
+						},
+					},
+				},
+
+				ruff = {
+					-- ruff's hover is a thinner version of basedpyright's, so let
+					-- basedpyright own hover and keep ruff for diagnostics/actions.
+					on_attach = function(client)
+						client.server_capabilities.hoverProvider = false
+					end,
+				},
+
+				-- TypeScript/JavaScript (also handles .tsx/.jsx)
+				ts_ls = {},
+
+				-- Shell scripts; needs shellcheck on $PATH for diagnostics
+				bashls = {},
+
+				sourcekit = {
+					-- sourcekit-lsp ships with Xcode's toolchain, not Mason, so it's
+					-- excluded from ensure_installed below; lspconfig finds it on $PATH.
+					filetypes = { "swift", "objective-c", "objective-cpp" },
+				},
 			}
 
 			-- Ensure the servers and tools above are installed
@@ -648,25 +692,33 @@ require("lazy").setup({
 			-- You can add other tools here that you want Mason to install
 			-- for you, so that they are available from within Neovim.
 			local ensure_installed = vim.tbl_keys(servers or {})
+			-- sourcekit-lsp ships with Xcode, not Mason: don't try to install it
+			ensure_installed = vim.tbl_filter(function(name)
+				return name ~= "sourcekit"
+			end, ensure_installed)
 			vim.list_extend(ensure_installed, {
 				"stylua", -- Used to format Lua code
+				"shellcheck", -- bashls shells out to this for diagnostics
 			})
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
 			require("mason-lspconfig").setup({
 				ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
 				automatic_installation = false,
-				handlers = {
-					function(server_name)
-						local server = servers[server_name] or {}
-						-- This handles overriding only values explicitly passed
-						-- by the server configuration above. Useful when disabling
-						-- certain features of an LSP (for example, turning off formatting for ts_ls)
-						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-						require("lspconfig")[server_name].setup(server)
-					end,
-				},
 			})
+
+			-- Neovim 0.11+ configures servers through `vim.lsp.config`; the
+			-- `require('lspconfig')[server].setup()` framework is deprecated.
+			-- See `:help lspconfig-nvim-0.11`.
+			vim.lsp.config("*", { capabilities = capabilities })
+			for server_name, server in pairs(servers) do
+				vim.lsp.config(server_name, server)
+			end
+
+			-- mason-lspconfig auto-enables Mason-installed servers, but
+			-- sourcekit-lsp ships with Xcode's toolchain, so enable everything
+			-- we configured explicitly (vim.lsp.enable is idempotent).
+			vim.lsp.enable(vim.tbl_keys(servers))
 		end,
 	},
 
@@ -820,8 +872,11 @@ require("lazy").setup({
 		config = function()
 			---@diagnostic disable-next-line: missing-fields
 			require("tokyonight").setup({
+				transparent = true,
 				styles = {
 					comments = { italic = false }, -- Disable italics in comments
+					sidebars = "transparent",
+					floats = "transparent",
 				},
 			})
 
@@ -880,7 +935,6 @@ require("lazy").setup({
 	{ -- Highlight, edit, and navigate code
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
-		main = "nvim-treesitter.configs", -- Sets main module to use for opts
 		-- [[ Configure Treesitter ]] See `:help nvim-treesitter`
 		opts = {
 			ensure_installed = {
@@ -893,6 +947,7 @@ require("lazy").setup({
 				"markdown",
 				"markdown_inline",
 				"query",
+				"swift",
 				"vim",
 				"vimdoc",
 			},
@@ -907,6 +962,52 @@ require("lazy").setup({
 			},
 			indent = { enable = true, disable = { "ruby" } },
 		},
+		-- nvim 0.12 removed the `all = false` option that used to make treesitter
+		-- hand query predicate/directive handlers a single TSNode. Handlers now
+		-- always receive a TSNode[] per capture, but nvim-treesitter's `master`
+		-- branch (frozen at nvim <= 0.10) still indexes `match[id]` as one node.
+		-- So `#set-lang-from-info-string!` in its markdown/injections.scm blows up
+		-- with "attempt to call method 'range' (a nil value)" on any fenced code
+		-- block, taking markdown highlighting down with it (also bash/hcl/php/ruby
+		-- injections and several folds queries). Adapt the calling convention here
+		-- instead of patching the plugin, so it survives :Lazy update.
+		-- Delete this once nvim-treesitter is migrated to the `main` branch.
+		config = function(_, opts)
+			local query = require("vim.treesitter.query")
+			local add_predicate, add_directive = query.add_predicate, query.add_directive
+
+			local function unwrap(match)
+				local single = {}
+				for id, nodes in pairs(match) do
+					if type(nodes) == "table" then
+						single[id] = nodes[1]
+					else
+						single[id] = nodes
+					end
+				end
+				return single
+			end
+
+			local function adapt(register)
+				return function(name, handler, o)
+					o = type(o) == "boolean" and { force = o } or vim.deepcopy(o or {})
+					o.force = true
+					return register(name, function(match, ...)
+						return handler(unwrap(match), ...)
+					end, o)
+				end
+			end
+
+			query.add_predicate, query.add_directive = adapt(add_predicate), adapt(add_directive)
+			package.loaded["nvim-treesitter.query_predicates"] = nil
+			local ok, err = pcall(require, "nvim-treesitter.query_predicates")
+			query.add_predicate, query.add_directive = add_predicate, add_directive
+			if not ok then
+				vim.notify("nvim-treesitter predicate shim failed: " .. tostring(err), vim.log.levels.WARN)
+			end
+
+			require("nvim-treesitter.configs").setup(opts)
+		end,
 		-- There are additional nvim-treesitter modules that you can use to interact
 		-- with nvim-treesitter. You should go explore a few and see what interests you:
 		--
