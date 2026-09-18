@@ -45,6 +45,11 @@ default-root-container-orientation = 'auto'
 # Fallback value (if you omit the key): on-focused-monitor-changed = []
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
+# Re-evaluate sketchybar whenever window focus changes, so the bar can hide
+# itself while a macOS-native-fullscreen window is focused and reappear when
+# focus moves away (handled by sketchybar's plugins/fullscreen.sh).
+on-focus-changed = ['exec-and-forget /opt/homebrew/opt/sketchybar/bin/sketchybar --trigger aerospace_focus_change']
+
 # You can effectively turn off macOS "Hide application" (cmd-h) feature by toggling this flag
 # Useful if you don't use this macOS feature, but accidentally hit cmd-h or cmd-alt-h key
 # Also see: https://nikitabobko.github.io/AeroSpace/goodies#disable-hide-app
@@ -68,8 +73,8 @@ automatically-unhide-macos-hidden-apps = false
     inner.vertical =   5
     outer.left =       5
     outer.bottom =     5
-    # Secondary monitor has no macOS menu bar, so reserve room for sketchybar (height 45).
-    outer.top =        [{ monitor.main = 5 }, { monitor.secondary = 40 }, 5]
+    # Secondary monitor has no macOS menu bar, so reserve room for sketchybar (height 40).
+    outer.top =        [{ monitor."built-in" = 5 }, 40]
     outer.right =      5
 
 # 'main' binding mode declaration
@@ -121,32 +126,55 @@ automatically-unhide-macos-hidden-apps = false
     alt-shift-k = 'move up'
     alt-shift-l = 'move right'
 
+    # Merge the focused window with its neighbor (join-with)
+    alt-ctrl-h = 'join-with left'
+    alt-ctrl-j = 'join-with down'
+    alt-ctrl-k = 'join-with up'
+    alt-ctrl-l = 'join-with right'
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#resize
     alt-minus = 'resize smart -50'
     alt-equal = 'resize smart +50'
 
-    # Per-monitor 1-9 switching: main uses workspaces 1-9, secondary uses A-I.
-    # The helper routes each alt-N to the correct workspace based on the focused monitor.
-    alt-1 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 1'
-    alt-2 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 2'
-    alt-3 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 3'
-    alt-4 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 4'
-    alt-5 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 5'
-    alt-6 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 6'
-    alt-7 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 7'
-    alt-8 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 8'
-    alt-9 = 'exec-and-forget /Users/home/.config/aerospace/focus-workspace.sh 9'
+    # Switch to workspace N. Workspaces 1-5 live on the primary (main) monitor,
+    # 6-10 on the secondary, pinned via [workspace-to-monitor-force-assignment]
+    # at the bottom of this file. Pressing alt-N moves focus (and the active
+    # monitor) to wherever workspace N is pinned.
+    alt-1 = 'workspace 1'
+    alt-2 = 'workspace 2'
+    alt-3 = 'workspace 3'
+    alt-4 = 'workspace 4'
+    alt-5 = 'workspace 5'
+    alt-6 = 'workspace 6'
+    alt-7 = 'workspace 7'
+    alt-8 = 'workspace 8'
+    alt-9 = 'workspace 9'
+    alt-0 = 'workspace 10'
 
-    # Move focused window to workspace at index N on the focused monitor.
-    alt-shift-1 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 1'
-    alt-shift-2 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 2'
-    alt-shift-3 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 3'
-    alt-shift-4 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 4'
-    alt-shift-5 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 5'
-    alt-shift-6 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 6'
-    alt-shift-7 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 7'
-    alt-shift-8 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 8'
-    alt-shift-9 = 'exec-and-forget /Users/home/.config/aerospace/move-to-workspace.sh 9'
+    # Move focused window to workspace N and follow it there.
+    alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
+    alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
+    alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
+    alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
+    alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
+    alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
+    alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
+    alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
+    alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
+    alt-shift-0 = 'move-node-to-workspace 10 --focus-follows-window'
+
+    # Move ALL windows in the current workspace to workspace N, then follow them
+    # there. Layout is kept for simple tilings; nested layouts get flattened.
+    alt-ctrl-1 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 1'
+    alt-ctrl-2 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 2'
+    alt-ctrl-3 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 3'
+    alt-ctrl-4 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 4'
+    alt-ctrl-5 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 5'
+    alt-ctrl-6 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 6'
+    alt-ctrl-7 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 7'
+    alt-ctrl-8 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 8'
+    alt-ctrl-9 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 9'
+    alt-ctrl-0 = 'exec-and-forget /Users/home/.config/aerospace/move-workspace-windows.sh 10'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
     # alt-tab = 'workspace-back-and-forth'
@@ -159,6 +187,14 @@ automatically-unhide-macos-hidden-apps = false
     # Custom bindings
     alt-shift-f = 'layout floating tiling'
 
+    # Fullscreen. alt-f keeps the window managed by AeroSpace (respects the
+    # outer gaps, so it never collides with sketchybar). alt-ctrl-f toggles
+    # real macOS native fullscreen through AeroSpace so the window's state
+    # stays tracked instead of vanishing into an unmanaged macOS space;
+    # sketchybar hides itself while a native-fullscreen window is focused.
+    alt-f = 'fullscreen'
+    alt-ctrl-f = 'macos-native-fullscreen'
+
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
 [mode.service.binding]
@@ -169,34 +205,26 @@ automatically-unhide-macos-hidden-apps = false
     # sticky is not yet supported https://github.com/nikitabobko/AeroSpace/issues/2
     #s = ['layout sticky tiling', 'mode main']
 
-    alt-shift-h = ['join-with left', 'mode main']
-    alt-shift-j = ['join-with down', 'mode main']
-    alt-shift-k = ['join-with up', 'mode main']
-    alt-shift-l = ['join-with right', 'mode main']
-
     down = 'volume down'
     up = 'volume up'
     shift-down = ['volume set 0', 'mode main']
 
-# Pin workspaces to monitors: 1-9 on main (primary display per macOS System
-# Settings), A-I on secondary. Sketchybar renders A-I as 1-9 on the secondary
-# display, so each monitor feels like its own 1-9.
+# Pin workspaces to monitors by ROLE (not by monitor name) so the split follows
+# whichever display you set as Primary in macOS System Settings -> Displays:
+#   - 'main'      = the Primary display
+#   - 'secondary' = the other display (when exactly two monitors are connected)
+# Workspaces 1-5 -> primary, 6-10 -> secondary. Each monitor switches freely
+# within its own set, so the second screen is no longer stuck on one workspace.
+# With only one monitor connected, 'secondary' has no match and 6-10 fall back
+# to the main monitor automatically, so every workspace stays reachable.
 [workspace-to-monitor-force-assignment]
-1 = 'main'
-2 = 'main'
-3 = 'main'
-4 = 'main'
-5 = 'main'
-6 = 'main'
-7 = 'main'
-8 = 'main'
-9 = 'main'
-A = 'secondary'
-B = 'secondary'
-C = 'secondary'
-D = 'secondary'
-E = 'secondary'
-F = 'secondary'
-G = 'secondary'
-H = 'secondary'
-I = 'secondary'
+    1  = 'main'
+    2  = 'main'
+    3  = 'main'
+    4  = 'main'
+    5  = 'main'
+    6  = 'secondary'
+    7  = 'secondary'
+    8  = 'secondary'
+    9  = 'secondary'
+    10 = 'secondary'

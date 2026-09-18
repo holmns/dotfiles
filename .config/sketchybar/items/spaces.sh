@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #SPACE_ICONS=("1" "2" "3" "4")
 
@@ -7,30 +7,17 @@
 
 sketchybar --add event aerospace_workspace_change
 
-num_monitors=$(aerospace list-monitors | wc -l | tr -d ' ')
+# Aerospace monitor IDs don't match sketchybar's display IDs, so map each
+# aerospace monitor to the right sketchybar `display=` number. Shared with the
+# workspace-change handler so both paths agree on where a space renders.
+# Why: without this, workspaces render on the wrong (or no) physical display.
+source "$CONFIG_DIR/helpers/workspace_icons.sh"
 
 for m in $(aerospace list-monitors | awk '{print $1}'); do
+  sb_display=$(sb_display_for "$m")
   for i in $(aerospace list-workspaces --monitor $m); do
-    # When only main is connected, skip A-I (they'd be parked on main temporarily).
-    if [ "$num_monitors" = "1" ]; then
-      case "$i" in
-        [A-I]) continue ;;
-      esac
-    fi
     sid=$i
-    # Internal workspace names A-I (secondary monitor) render as 1-9.
-    case "$sid" in
-      A) label_icon=1 ;;
-      B) label_icon=2 ;;
-      C) label_icon=3 ;;
-      D) label_icon=4 ;;
-      E) label_icon=5 ;;
-      F) label_icon=6 ;;
-      G) label_icon=7 ;;
-      H) label_icon=8 ;;
-      I) label_icon=9 ;;
-      *) label_icon=$sid ;;
-    esac
+    label_icon=$sid
     space=(
       space="$sid"
       icon="$label_icon"
@@ -38,7 +25,7 @@ for m in $(aerospace list-monitors | awk '{print $1}'); do
       icon.highlight_color=$WHITE
       icon.padding_left=10
       icon.padding_right=10
-      display=$m
+      display=$sb_display
       padding_left=2
       padding_right=2
       label.padding_right=20
@@ -54,32 +41,11 @@ for m in $(aerospace list-monitors | awk '{print $1}'); do
     sketchybar --add space space.$sid left \
                --set space.$sid "${space[@]}" \
                --subscribe space.$sid mouse.clicked
-
-    apps=$(aerospace list-windows --workspace $sid | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
-
-    icon_strip=" "
-    if [ "${apps}" != "" ]; then
-      while read -r app
-      do
-        icon_strip+=" $($CONFIG_DIR/plugins/icon_map.sh "$app")"
-      done <<< "${apps}"
-    else
-      icon_strip=" —"
-    fi
-
-    sketchybar --set space.$sid label="$icon_strip"
   done
-
-  for i in $(aerospace list-workspaces --monitor $m --empty); do
-    if [ "$num_monitors" = "1" ]; then
-      case "$i" in
-        [A-I]) continue ;;
-      esac
-    fi
-    sketchybar --set space.$i display=0
-  done
-
 done
+
+# Fill in every workspace's icon strip + visibility from one shared code path.
+ws_refresh
 
 
 space_creator=(
@@ -101,7 +67,3 @@ space_creator=(
 sketchybar --add item space_creator left               \
            --set space_creator "${space_creator[@]}"   \
            --subscribe space_creator aerospace_workspace_change
-
-# sketchybar  --add item change_windows left \
-#             --set change_windows script="$PLUGIN_DIR/change_windows.sh" \
-#             --subscribe change_windows space_changes
