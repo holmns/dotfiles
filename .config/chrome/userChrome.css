@@ -9,7 +9,7 @@
     --uc-text: #ffffff;
     --uc-border: transparent;
     --uc-menu-separator: rgba(255, 255, 255, 0.10);
-    --uc-toolbar-padding-x: 16px;
+    --uc-toolbar-padding-x: 12px;
     --uc-toolbar-padding-y: 8px;
     --uc-urlbar-max-width: 820px;
 
@@ -126,6 +126,12 @@ menupopup {
     :root[customtitlebar]:not([inFullscreen]) #nav-bar > .titlebar-buttonbox-container {
         display: flex !important;
     }
+
+    /* 12px toolbar padding + 10px here puts the traffic lights as far from
+       the window's left edge as from its top. */
+    #nav-bar > .titlebar-buttonbox-container > .titlebar-buttonbox {
+        margin-inline-start: 10px !important;
+    }
 }
 
 :root[sizemode="fullscreen"] #nav-bar > .titlebar-buttonbox-container {
@@ -142,29 +148,84 @@ menupopup {
 #nav-bar {
     min-height: 46px !important;
     padding: var(--uc-toolbar-padding-y) var(--uc-toolbar-padding-x) !important;
+    /* The menu button's own padding is wider than the icon's; 3px less here
+       puts the icon as far from the right edge as from the top. */
+    padding-inline-end: calc(var(--uc-toolbar-padding-x) - 3px) !important;
 }
 
 #TabsToolbar {
     min-height: 38px !important;
     padding: 2px var(--uc-toolbar-padding-x) 8px !important;
+    /* Lines the all-tabs chevron up with the menu button above it. */
+    padding-inline-end: calc(var(--uc-toolbar-padding-x) + 2px) !important;
 }
 
 #nav-bar .customization-target {
     align-items: center !important;
     display: flex !important;
     padding-inline: 0 !important;
-    width: 100% !important;
+    /* Flex instead of width: 100%, so a narrow window overflows into
+       Firefox's overflow menu instead of stacking buttons on each other. */
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
 
 #TabsToolbar .toolbar-items {
     padding-inline: 0 !important;
 }
 
+/* Bookmarks row hides behind an invisible strip under the nav bar. Hovering
+   the strip (or tabbing into it, or opening a bookmark folder) slides it down.
+   At rest the strip takes no layout space: it sits over empty space that
+   already exists, the nav bar's bottom padding above and the tabs row's top
+   padding plus the tab capsules' top margin below. That makes a 13px hover
+   target that costs no height.
+   Expanding waits 80ms so a cursor passing through doesn't flash it open;
+   collapsing waits 1000ms so a slightly loose cursor doesn't snap it shut. */
+#PersonalToolbar:not([collapsed], [customizing]) {
+    --uc-strip-above: var(--uc-toolbar-padding-y);
+    --uc-strip-below: 5px;
+    /* Above the nav bar and tabs, so the overlapped space hits the strip. */
+    position: relative !important;
+    z-index: 1 !important;
+    /* The strip's top edge never moves, even while open; the row is pushed
+       below the overlap by padding instead. Otherwise opening would slide
+       the strip out from under a cursor at its top and close it again. */
+    margin-top: calc(-1 * var(--uc-strip-above)) !important;
+    margin-bottom: calc(-1 * var(--uc-strip-below)) !important;
+    padding-top: var(--uc-strip-above) !important;
+    max-height: calc(var(--uc-strip-above) + var(--uc-strip-below)) !important;
+    transition: max-height 200ms ease-out 1000ms, margin-bottom 200ms ease-out 1000ms !important;
+
+    > #personal-bookmarks {
+        opacity: 0;
+        transform: translateY(-22px);
+        transition: transform 200ms ease-out 1000ms, opacity 150ms ease-out 1000ms;
+    }
+
+    &:is(:hover, :focus-within, :has([open])) {
+        margin-bottom: 0 !important;
+        max-height: calc(24px + var(--uc-strip-above)) !important;
+        transition-delay: 80ms !important;
+
+        > #personal-bookmarks {
+            opacity: 1;
+            transform: none;
+            transition-delay: 80ms;
+        }
+    }
+}
+
+/* Bookmarks centered in their row. */
+#PlacesToolbarItems {
+    justify-content: safe center !important;
+}
+
 #urlbar-container {
     flex: 1 1 auto !important;
     margin-inline: 0 !important;
     max-width: none !important;
-    min-width: 260px !important;
+    min-width: 180px !important;
     padding-block: 5px !important;
     padding-inline: 6px 12px !important;
 }
@@ -275,8 +336,24 @@ menupopup {
     fill-opacity: 1 !important;
 }
 
-#tabs-newtab-button {
-    display: none !important;
+/* New tab + after the last tab: always clickable, but only visible under the
+   cursor. Firefox hides it on its own once the tab strip overflows. */
+#tabbrowser-arrowscrollbox:not([overflowing]) #tabs-newtab-button {
+    display: flex !important;
+    opacity: 0 !important;
+    transition: opacity 120ms ease !important;
+}
+
+#tabbrowser-arrowscrollbox:not([overflowing]) #tabs-newtab-button:hover {
+    opacity: 1 !important;
+}
+
+#tabs-newtab-button > .toolbarbutton-icon {
+    border-radius: 50% !important;
+}
+
+#tabs-newtab-button:hover > .toolbarbutton-icon {
+    background-color: var(--uc-bg-hover) !important;
 }
 
 #trust-icon-container,
@@ -371,22 +448,50 @@ menupopup {
     caret-color: var(--uc-url-domain) !important;
 }
 
+/* The engine switcher can show the engine's name, which takes half the bar
+   in a narrow window. The engine icon next to it already says which one. */
+#urlbar .searchmode-switcher-title {
+    display: none !important;
+}
+
 /* Center the address at rest; snap back to leading while editing.
-   At rest the input box spans the bar with equal insets on both sides, so the
-   text centers on the whole bar rather than on the space after the left icons. */
+   At rest the input box leaves the flex row and an empty spacer takes its
+   place, so the icons before it stay left and the ones after it stay right.
+   The box then gets the same inset on both sides, sized to whichever icon
+   group is wider: centered on the whole bar, and never under an icon. */
 #urlbar:not([focused]) {
     > .urlbar-input-container {
         position: relative !important;
     }
 
-    > .urlbar-input-container > .urlbar-input-box {
-        position: absolute !important;
-        inset-block: 0 !important;
-        inset-inline: 56px !important;
+    > .urlbar-input-container::before {
+        content: "" !important;
+        flex: 1 !important;
+        order: 1 !important;
+        anchor-name: --uc-urlbar-gap;
     }
 
-    > .urlbar-input-container > #page-action-buttons {
-        margin-inline-start: auto !important;
+    > .urlbar-input-container > .urlbar-input-box ~ * {
+        order: 2 !important;
+    }
+
+    > .urlbar-input-container > .urlbar-input-box {
+        /* Inset each side by the wider icon group, so the text centers on
+           the whole bar. When that would leave the text under 200px, the left
+           inset gives way first, then the right one drops to its own group,
+           so the box shifts off center instead of collapsing. anchor()
+           measures from the edge its property names, which is why the group
+           widths are spelled differently on each side. */
+        --uc-left-in-left: max(anchor(--uc-urlbar-gap left),
+            min(max(anchor(--uc-urlbar-gap left), 100% - anchor(--uc-urlbar-gap right)), (100% - 200px) / 2));
+        --uc-left-in-right: max(100% - anchor(--uc-urlbar-gap left),
+            min(max(100% - anchor(--uc-urlbar-gap left), anchor(--uc-urlbar-gap right)), (100% - 200px) / 2));
+        position: absolute !important;
+        inset-block: 0 !important;
+        left: calc(var(--uc-left-in-left) + 6px) !important;
+        right: calc(6px + max(anchor(--uc-urlbar-gap right),
+            min(max(100% - anchor(--uc-urlbar-gap left), anchor(--uc-urlbar-gap right)),
+                100% - var(--uc-left-in-right) - 212px))) !important;
     }
 
     :is(#urlbar-input, #urlbar-scheme) {
